@@ -7,6 +7,11 @@
 #define SCREEN_REZ 600
 
 #define GEN_BUSHES 200
+#define SHAKE 6.0f
+#define SHAKE_UP 0.04f
+
+#define FIRE_SPEED 15.0f
+#define FIRE_SCALE 0.8f
 
 #define AIM_MAX (SCREEN_RADIUS*0.6f)
 
@@ -17,6 +22,8 @@ typedef enum {
 	BLOCK_GUN,
 	BLOCK_CROSSHAIR1,
 	BLOCK_CROSSHAIR2,
+	BLOCK_FIRE1,
+	BLOCK_FIRE2,
 	BLOCK_GRASS,
 	BLOCK_ROAD_H,
 	BLOCK_ROAD_V,
@@ -35,6 +42,8 @@ static const BlockSprite blockSprites[] = {
 	[BLOCK_GUN] = { 3, 0 },
 	[BLOCK_CROSSHAIR1] = { 4, 0 },
 	[BLOCK_CROSSHAIR2] = { 5, 0 },
+	[BLOCK_FIRE1] = { 6, 0 },
+	[BLOCK_FIRE2] = { 7, 0 },
 	[BLOCK_GRASS] = { 0, 1 },
 	[BLOCK_ROAD_H] = { 1, 1 },
 	[BLOCK_ROAD_V] = { 2, 1 },

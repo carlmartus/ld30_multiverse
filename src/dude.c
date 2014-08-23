@@ -4,9 +4,10 @@
 #include <math.h>
 #include "common.h"
 
-static float locX, locY;
+static float locX, locY, shaky;
 static float aimX, aimY, lookX, lookY;
-static char move_w, move_s, move_a, move_d;
+static char move_w, move_s, move_a, move_d, firing;
+static float walking, elapse;
 
 static void event_w(int sdlkey, int down) { move_w = down; }
 static void event_s(int sdlkey, int down) { move_s = down; }
@@ -14,13 +15,14 @@ static void event_a(int sdlkey, int down) { move_a = down; }
 static void event_d(int sdlkey, int down) { move_d = down; }
 
 void dude_init(void) {
-	locX = 0.0f;
-	locY = 0.0f;
+	locX = locY = shaky = 0.0f;
 
 	lookX = aimX = 0.0f;
 	lookY = aimY = 0.0f;
 
-	move_w = move_s = move_a = move_d = 0;
+	move_w = move_s = move_a = move_d = firing = 0;
+
+	walking = elapse = 0.0f;
 
 	esGame_registerKey(SDLK_UP,		event_w);
 	esGame_registerKey(SDLK_DOWN,	event_s);
@@ -31,17 +33,6 @@ void dude_init(void) {
 void dude_clear(void) {
 }
 
-static void drawCanon(void) {
-	float angle = atan2f(aimY, aimX);
-	drawSprite(locX, locY, SCALE_DUDE, angle, BLOCK_GUN, 0);
-}
-
-static void drawBody(void) {
-	drawSprite(locX, locY, SCALE_DUDE, 0.0f, BLOCK_HEAD, 0);
-	drawSprite(locX, locY, SCALE_DUDE, 0.0f, BLOCK_BODY, 0);
-	drawSprite(locX, locY, SCALE_DUDE, 0.0f, BLOCK_FEET, 0);
-}
-
 void dude_frame(float fr) {
 	float moveX=0.0f, moveY=0.0f;
 	if (move_a) moveX -= 1.0f;
@@ -49,14 +40,43 @@ void dude_frame(float fr) {
 	if (move_w) moveY += 1.0f;
 	if (move_s) moveY -= 1.0f;
 
-	locX += moveX*fr*3.0f;
-	locY += moveY*fr*3.0f;
+	if (moveX != 0.0f || moveY != 0.0f) {
+		locX += moveX*fr*3.0f;
+		locY += moveY*fr*3.0f;
+		walking += fr;
+
+		if (((int) (walking*SHAKE)) & 1) {
+			shaky = SHAKE_UP;
+		} else {
+			shaky = -SHAKE_UP;
+		}
+	} else {
+		shaky = 0.0f;
+	}
+
+	elapse += fr;
+}
+
+static void drawCanon(void) {
+	float angle = atan2f(aimY, aimX);
+	drawSprite(locX, locY+shaky, SCALE_DUDE, angle, BLOCK_GUN, 0);
+}
+
+static void drawBody(void) {
+	drawSprite(locX, locY+shaky, SCALE_DUDE, 0.0f, BLOCK_HEAD, 0);
+	drawSprite(locX, locY+shaky, SCALE_DUDE, 0.0f, BLOCK_BODY, 0);
+	drawSprite(locX, locY+shaky, SCALE_DUDE, 0.0f, BLOCK_FEET, 0);
+}
+
+static void drawFire(void) {
+	int step = ((int) (elapse*FIRE_SPEED));
+
+	drawSprite(locX, locY+shaky, FIRE_SCALE, 0.0f,
+			step & 1 ? BLOCK_FIRE1 : BLOCK_FIRE2,
+			(step >> 1) & (ES_SPRITE_FLIPX|ES_SPRITE_FLIPY));
 }
 
 void dude_render(void) {
-	drawSprite(locX+aimX, locY+aimY,	SCALE_CROSSHAIR, 0.0f, BLOCK_CROSSHAIR1, 0);
-	drawSprite(locX+lookX, locY+lookY,	SCALE_CROSSHAIR, 0.0f, BLOCK_CROSSHAIR2, 0);
-
 	if (aimY > 0.0f) {
 		drawCanon();
 		drawBody();
@@ -64,6 +84,11 @@ void dude_render(void) {
 		drawBody();
 		drawCanon();
 	}
+
+	if (firing) drawFire();
+
+	drawSprite(locX+aimX, locY+aimY,	SCALE_CROSSHAIR, 0.0f, BLOCK_CROSSHAIR1, 0);
+	drawSprite(locX+lookX, locY+lookY,	SCALE_CROSSHAIR, 0.0f, BLOCK_CROSSHAIR2, 0);
 }
 
 void dude_setAim(float sAimX, float sAimY) {
@@ -80,6 +105,10 @@ void dude_setAim(float sAimX, float sAimY) {
 		aimX = lookX;
 		aimY = lookY;
 	}
+}
+
+void dude_setFire(char on) {
+	firing = on;
 }
 
 void dude_readPos(float *x, float *y) {

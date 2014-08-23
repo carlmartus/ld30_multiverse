@@ -67,6 +67,13 @@ static void mouseEvent(int button, int down, int x, int y) {
 	ax = SCREEN_RADIUS * (2.0f * ax - 1.0f);
 	ay = SCREEN_RADIUS * (2.0f * ay - 1.0f);
 	dude_setAim(ax, -ay);
+
+	if (button) {
+		switch (button) {
+			case 1 : dude_setFire(down); break;
+			default : break;
+		}
+	}
 }
 
 int main(int argc, char **argv) {
