@@ -1,0 +1,47 @@
+#pragma once
+
+#define SCALE_WORLD 0.5f
+#define SCALE_DUDE 0.5f
+#define SCALE_CROSSHAIR 0.4f
+#define SCREEN_RADIUS 11.0f
+#define SCREEN_REZ 600
+
+#define GEN_BUSHES 200
+
+#define AIM_MAX (SCREEN_RADIUS*0.6f)
+
+typedef enum {
+	BLOCK_HEAD,
+	BLOCK_BODY,
+	BLOCK_FEET,
+	BLOCK_GUN,
+	BLOCK_CROSSHAIR1,
+	BLOCK_CROSSHAIR2,
+	BLOCK_GRASS,
+	BLOCK_ROAD_H,
+	BLOCK_ROAD_V,
+	BLOCK_ROAD_X,
+	BLOCK_BUSH,
+} Block;
+
+typedef struct {
+	int spriteX, spriteY;
+} BlockSprite;
+
+static const BlockSprite blockSprites[] = {
+	[BLOCK_HEAD] = { 0, 0 },
+	[BLOCK_BODY] = { 1, 0 },
+	[BLOCK_FEET] = { 2, 0 },
+	[BLOCK_GUN] = { 3, 0 },
+	[BLOCK_CROSSHAIR1] = { 4, 0 },
+	[BLOCK_CROSSHAIR2] = { 5, 0 },
+	[BLOCK_GRASS] = { 0, 1 },
+	[BLOCK_ROAD_H] = { 1, 1 },
+	[BLOCK_ROAD_V] = { 2, 1 },
+	[BLOCK_ROAD_X] = { 3, 1 },
+	[BLOCK_BUSH] = { 4, 1 },
+};
+
+void drawSprite(float x, float y, float scale,
+		float rotation, Block block, int flags);
+

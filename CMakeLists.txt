@@ -20,5 +20,5 @@ set(GAME ld30_multiverse)
 
 file(GLOB SOURCE src/*.c)
 add_executable(${GAME} ${SOURCE})
-target_link_libraries(${GAME} estk3 SDL GL GLEW)
+target_link_libraries(${GAME} estk3 SDL GL GLEW m)
 

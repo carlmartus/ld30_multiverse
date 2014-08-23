@@ -6,9 +6,11 @@ attribute vec2 in_uv;
 
 varying vec2 va_uv;
 
+uniform mat4 un_mvp;
+
 void main()
 {
 	va_uv = in_uv;
-	gl_Position = vec4(in_vertex, 0.0, 1.0);
+	gl_Position = un_mvp * vec4(in_vertex, 0.0, 1.0);
 }
 
