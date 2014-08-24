@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/sh -e
 
-emcc -o bin/ld30.html src/*.c libestk3.bc -I"../libestk/src" --preload-file media
+mkdir -p web
+emcc -o web/ld30.js src/*.c libestk3.bc -I"../libestk/src" --preload-file media
+cp html/* web
 

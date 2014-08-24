@@ -2,8 +2,10 @@
 #include "common.h"
 #include "dude.h"
 #include "blood.h"
+#include "sound.h"
 #include <estk.h>
 #include <math.h>
+#include <stdlib.h>
 
 #define MAX_MONSTERS 200
 
@@ -36,6 +38,7 @@ typedef struct {
 	float counter;
 	int type, flags, state;
 	int hp;
+	int armor;
 
 	union {
 		StateBat bat;
@@ -47,21 +50,29 @@ static int monsterCount;
 static float elapse = 0.0f;
 static esVec2f dudeLoc;
 
-static Monster *spawn(int monsterType) {
+static Monster *spawn(int monsterType, int level) {
 
 	Monster *mon = monsters + monsterCount++;
-	mon->loc.x = mon->loc.y = 10.0f;
 	mon->flags = FLAG_ALIVE;
 	mon->type = monsterType;
 	mon->hp = monsterStats[monsterType].hp;
 	mon->state = monsterStats[monsterType].state;
+	mon->armor = 0;
+
+	float dudeX, dudeY;
+	dudeReadPos(&dudeX, &dudeY);
+
+	float v = (float) (rand() & 127) * 0.1f;
+	float amp = 8.0f + level;
+	mon->loc.x = dudeX + cosf(v)*amp;
+	mon->loc.y = dudeY + sinf(v)*amp;
 	return mon;
 }
 
 // Bat {{{
 
-static void batSpawn(void) {
-	spawn(MONSTER_BAT);
+static void batSpawn(int level) {
+	spawn(MONSTER_BAT, level)->armor = 2;
 }
 
 static void batFrame(Monster *bat, float fr) {
@@ -81,6 +92,7 @@ static void batFrame(Monster *bat, float fr) {
 			if (dist > 0.1f && dist < 5.0f) {
 				bat->state = BAT_CHARGE;
 				bat->counter = 0.5f;
+				soundPlay(SOUND_FLAP);
 			}
 			break;
 
@@ -91,14 +103,16 @@ static void batFrame(Monster *bat, float fr) {
 				bat->bat.charge = normalize(v0);
 				bat->state = BAT_ATTACK;
 				bat->counter = 0.8f;
+				bat->armor = 0;
+				soundPlay(SOUND_BAT1);
 			}
 			break;
 
 		case BAT_ATTACK :
 		case BAT_BACK :
 
-			bat->loc.x += bat->bat.charge.x*9.0f*fr;
-			bat->loc.y += bat->bat.charge.y*9.0f*fr;
+			bat->loc.x += bat->bat.charge.x*8.5f*fr;
+			bat->loc.y += bat->bat.charge.y*8.5f*fr;
 
 			if (bat->state == BAT_ATTACK) {
 				if (dudeTouching(bat->loc, 0.6f)) {
@@ -107,12 +121,14 @@ static void batFrame(Monster *bat, float fr) {
 					bat->bat.charge.x = -bat->bat.charge.x*0.5f;
 					bat->bat.charge.y = -bat->bat.charge.y*0.5f;
 					bat->state = BAT_BACK;
+					bat->armor = 2;
 					bat->counter = 0.4f;
 				}
 			}
 
 			if (bat->counter < 0.0f) {
 				bat->state = BAT_FLY;
+				bat->armor = 2;
 			}
 			break;
 	}
@@ -144,7 +160,7 @@ static void batRender(const Monster *bat) {
 // =======
 
 static struct {
-	void (*spawn) (void);
+	void (*spawn) (int level);
 	void (*frame) (Monster*, float fr);
 	void (*render) (const Monster*);
 } monstersVt[] = {
@@ -153,7 +169,11 @@ static struct {
 
 void roboGenerate(int seed, int iteration) {
 	monsterCount = 0;
-	batSpawn();
+
+	int i;
+	for (i=0; i<iteration; i++) {
+		batSpawn(iteration);
+	}
 }
 
 void roboFrame(float fr) {
@@ -202,12 +222,24 @@ void roboHit(float x, float y, int damage) {
 	while (itr < end) {
 		if (isHit(itr, x, y)) {
 			bloodHit(HIT_SMALL, x, y);
-			itr->hp -= damage;
+			itr->hp -= damage >> itr->armor;
 			if (itr->hp <= 0) {
 				itr->flags &= ~FLAG_ALIVE;
 			}
 		}
 		itr++;
 	}
+}
+
+int roboIsAllDead(void) {
+	const Monster *itr, *end;
+	itr = monsters;
+	end = itr + monsterCount;
+
+	while (itr < end) {
+		if (itr->flags & FLAG_ALIVE) return 0;
+		itr++;
+	}
+	return 1;
 }
 

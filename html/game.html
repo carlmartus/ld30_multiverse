@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+<title>Creep patrol</title>
+<style>
+body {
+	font-family: "Courier New", Courier, monospace;
+	font-size: 14pt;
+	background-color: #000;
+	color: #fff;
+}
+#output {
+	padding-left: 20px;
+	width: 320px;
+}
+.logo {
+	height: 100px;
+}
+</style>
+</head>
+<body>
+<center>
+	<table>
+		<tr>
+			<td>
+				<canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+			</td>
+			<td valign="top">
+				<img src="logo.png"/>
+				<div id="output">Creep Patrol</div>
+			</td>
+		</tr>
+	</table>
+</center>
+<script type='text/javascript'>
+if (typeof String.prototype.startsWith != 'function') {
+	String.prototype.startsWith = function (str){
+		return this.slice(0, str.length) == str;
+	};
+}
+var Module = {
+printErr: function(text) {
+			  if (text.startsWith("[CLEAR]")) {
+				  document.getElementById('output').innerHTML = "";
+			  } else {
+				  document.getElementById('output').innerHTML += text;
+			  }
+		  },
+canvas: document.getElementById('canvas'),
+		setStatus: function(text) {
+		},
+};
+Module.setStatus('Downloading...');
+</script>
+<script async type="text/javascript" src="ld30.js"></script>
+</body>
+</html>
+

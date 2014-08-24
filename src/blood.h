@@ -2,6 +2,7 @@
 
 typedef enum {
 	HIT_SMALL,
+	HIT_DIMENSION,
 } HitType;
 
 void bloodReset(void);

@@ -4,6 +4,8 @@
 #include "common.h"
 #include "blood.h"
 #include "robo.h"
+#include "sound.h"
+#include "state.h"
 
 #define SIZE_X 0.4f
 #define SIZE_Y 1.0f
@@ -20,7 +22,7 @@ static void event_s(int sdlkey, int down) { move_s = down; }
 static void event_a(int sdlkey, int down) { move_a = down; }
 static void event_d(int sdlkey, int down) { move_d = down; }
 
-void dudeInit(void) {
+void dudeRespawn(void) {
 	nextFire = 0.0f;
 	locX = locY = shaky = 0.0f;
 
@@ -31,11 +33,15 @@ void dudeInit(void) {
 
 	walking = elapse = 0.0f;
 	hp = 100;
+}
 
-	esGame_registerKey(SDLK_UP,		event_w);
-	esGame_registerKey(SDLK_DOWN,	event_s);
-	esGame_registerKey(SDLK_LEFT,	event_a);
-	esGame_registerKey(SDLK_RIGHT,	event_d);
+void dudeInit(void) {
+	dudeRespawn();
+
+	esGame_registerKey(SDLK_w,		event_w);
+	esGame_registerKey(SDLK_s,	event_s);
+	esGame_registerKey(SDLK_a,	event_a);
+	esGame_registerKey(SDLK_d,	event_d);
 }
 
 void dudeClear(void) {
@@ -49,7 +55,7 @@ static void moveDude(float fr) {
 	if (move_s) moveY -= 1.0f;
 
 	if (moveX != 0.0f || moveY != 0.0f) {
-		float speed = firing ? 1.5f : 3.0f;
+		float speed = firing ? 1.0f : 3.6f;
 		locX += moveX*fr*speed;
 		locY += moveY*fr*speed;
 		walking += fr;
@@ -70,6 +76,7 @@ static void fireDude(float fr) {
 		//esLog(ES_INFO, "%f %f | %f %f", locX, aimX, locY, aimY);
 		roboHit(locX+aimX, locY+aimY, FIRE_DAMAGE);
 		nextFire = elapse + FIRE_DELAY;
+		soundPlay(SOUND_SHOT);
 	}
 }
 
@@ -154,9 +161,13 @@ void dudeHurt(int hit) {
 	if (hp > 0 && hp - hit <= 0) {
 		bloodHit(HIT_SMALL, locX, locY);
 		bloodHit(HIT_SMALL, locX, locY);
+		soundPlay(SOUND_DUDEHURT1);
+	} else if (hp > 0) {
+		soundPlay(SOUND_DUDEHURT2);
 	}
 	hp -= hit;
 	bloodHit(HIT_SMALL, locX, locY);
+	stateOutput();
 }
 
 void dudeSetFire(char on) {
@@ -166,5 +177,13 @@ void dudeSetFire(char on) {
 void dudeReadPos(float *x, float *y) {
 	*x = locX;
 	*y = locY;
+}
+
+int dudeIsAlive(void) {
+	return hp > 0;
+}
+
+int dudeGetHp(void) {
+	return hp;
 }
 

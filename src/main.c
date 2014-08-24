@@ -3,10 +3,8 @@
 #include <GL/glew.h>
 #include <SDL/SDL.h>
 #include "common.h"
-#include "map.h"
+#include "state.h"
 #include "dude.h"
-#include "robo.h"
-#include "blood.h"
 
 enum {
 	SHAD_TEXTURE,
@@ -28,13 +26,12 @@ static void frame(float time) {
 	glUniform1i(esShader_uniformGl(&shad, SHAD_TEXTURE), 0);
 
 	// Frame
-	dudeFrame(time);
-	roboFrame(time);
+	stateFrame(time);
 
+	// View
 	float dudeX, dudeY;
 	dudeReadPos(&dudeX, &dudeY);
 
-	// View
 	esMat4f mat;
 	esProj_ortho(&mat,
 			dudeX - SCREEN_RADIUS, dudeY - SCREEN_RADIUS,
@@ -42,13 +39,7 @@ static void frame(float time) {
 	glUniformMatrix4fv(esShader_uniformGl(&shad, SHAD_MVP),
 			1, 0, (const float*) &mat);
 
-	// Map
-	mapRender(dudeX, dudeY, SCREEN_RADIUS*2.2f);
-
-	// Entities
-	roboRender();
-	dudeRender();
-	bloodProced(time);
+	stateRender();
 
 	esSprites2d_prepear();
 	esSprites2d_render();
@@ -58,8 +49,6 @@ static void frame(float time) {
 
 static void loop_exit(void) {
 	dudeClear();
-	mapClear();
-	esSprites2d_clear();
 	esTexture_free(&sprites);
 	esShader_free(&shad);
 }
@@ -130,13 +119,10 @@ int main(int argc, char **argv) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	bloodReset();
-	mapGenerate(0);
-	dudeInit();
-	roboGenerate(0, 1);
+	stateInit();
 
 	esGame_registerMouse(mouseEvent);
-	esGame_registerKey(SDLK_q, callback_quit);
+	esGame_registerKey(SDLK_ESCAPE, callback_quit);
 	esGame_loop(frame, loop_exit, 0);
 	return 0;
 }

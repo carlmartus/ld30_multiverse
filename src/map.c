@@ -1,6 +1,7 @@
 #include "map.h"
 #include <estk.h>
 #include "common.h"
+#include "robo.h"
 
 #define RAD_BS 7
 #define RAD (1<<RAD_BS)
@@ -29,7 +30,8 @@ static void spreadBushes(void) {
 	for (i=0; i<GEN_BUSHES; i++) {
 		int x = rand() & RAD_BM;
 		int y = rand() & RAD_BM;
-		map[x+y*RAD].type = BLOCK_BUSH;
+		int type = rand() & 1;
+		map[x+y*RAD].type = BLOCK_BUSH + type;
 	}
 }
 
@@ -47,6 +49,8 @@ void mapGenerate(int seed) {
 	fillGrass();
 	spreadBushes();
 	makeRoad();
+
+	roboGenerate(0, 1);
 }
 
 void mapRender(float centerX, float centerY, int blocks) {
