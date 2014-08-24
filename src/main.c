@@ -46,8 +46,8 @@ static void frame(float time) {
 	mapRender(dudeX, dudeY, SCREEN_RADIUS*2.2f);
 
 	// Entities
-	dudeRender();
 	roboRender();
+	dudeRender();
 	bloodProced(time);
 
 	esSprites2d_prepear();

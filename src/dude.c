@@ -3,6 +3,7 @@
 #include <math.h>
 #include "common.h"
 #include "blood.h"
+#include "robo.h"
 
 #define SIZE_X 0.4f
 #define SIZE_Y 1.0f
@@ -66,6 +67,7 @@ static void moveDude(float fr) {
 
 static void fireDude(float fr) {
 	if (elapse > nextFire) {
+		//esLog(ES_INFO, "%f %f | %f %f", locX, aimX, locY, aimY);
 		roboHit(locX+aimX, locY+aimY, FIRE_DAMAGE);
 		nextFire = elapse + FIRE_DELAY;
 	}
@@ -149,7 +151,7 @@ int dudeTouching(esVec2f thing, float rad) {
 }
 
 void dudeHurt(int hit) {
-	if (hp - hit <= 0) {
+	if (hp > 0 && hp - hit <= 0) {
 		bloodHit(HIT_SMALL, locX, locY);
 		bloodHit(HIT_SMALL, locX, locY);
 	}

@@ -1,7 +1,9 @@
 #include "robo.h"
 #include "common.h"
 #include "dude.h"
+#include "blood.h"
 #include <estk.h>
+#include <math.h>
 
 #define MAX_MONSTERS 200
 
@@ -22,9 +24,11 @@ typedef struct {
 // }}}
 
 static struct {
-	int hp, state;
+	int hp;
+	float size;
+	int state;
 } const monsterStats[] = {
-	[MONSTER_BAT] = { 30, BAT_FLY },
+	[MONSTER_BAT] = { 30, 0.5f, BAT_FLY },
 };
 
 typedef struct {
@@ -61,6 +65,11 @@ static void batSpawn(void) {
 }
 
 static void batFrame(Monster *bat, float fr) {
+
+	if ((bat->flags & FLAG_ALIVE) == 0) {
+		return;
+	}
+
 	float dist;
 	esVec2f v0;
 
@@ -125,7 +134,7 @@ static void batRender(const Monster *bat) {
 					animate(BLOCK_BAT1, 2, flapSpeed, elapse), 0);
 		}
 	} else {
-		drawSprite(bat->loc.x, bat->loc.y, 0.3f, 0.0f, BLOCK_BAT_DEAD, 0);
+		drawSprite(bat->loc.x, bat->loc.y, 0.4f, 0.0f, BLOCK_BAT_DEAD, 0);
 	}
 }
 
@@ -177,12 +186,27 @@ void roboRender() {
 	}
 }
 
+static inline int isHit(Monster *mon, float x, float y) {
+	float size = monsterStats[mon->type].size;
+
+	return fabsf(x - mon->loc.x) < size && fabsf(y - mon->loc.y) < size;
+}
+
 void roboHit(float x, float y, int damage) {
 	Monster *itr, *end;
 	itr = monsters;
 	end = itr + monsterCount;
 
+	//esLog(ES_INFO, "HIT %f %f", x, y);
+
 	while (itr < end) {
+		if (isHit(itr, x, y)) {
+			bloodHit(HIT_SMALL, x, y);
+			itr->hp -= damage;
+			if (itr->hp <= 0) {
+				itr->flags &= ~FLAG_ALIVE;
+			}
+		}
 		itr++;
 	}
 }
