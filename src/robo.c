@@ -54,10 +54,6 @@ static Monster *spawn(int monsterType) {
 	return mon;
 }
 
-static inline int animate(int baseFrame, int frameCount, int speed) {
-	return baseFrame + (int) (elapse*speed) % frameCount;
-}
-
 // Bat {{{
 
 static void batSpawn(void) {
@@ -96,8 +92,8 @@ static void batFrame(Monster *bat, float fr) {
 			bat->loc.y += bat->bat.charge.y*9.0f*fr;
 
 			if (bat->state == BAT_ATTACK) {
-				if (dude_touching(bat->loc, 0.6f)) {
-					dude_hurt(20);
+				if (dudeTouching(bat->loc, 0.6f)) {
+					dudeHurt(20);
 
 					bat->bat.charge.x = -bat->bat.charge.x*0.5f;
 					bat->bat.charge.y = -bat->bat.charge.y*0.5f;
@@ -115,15 +111,19 @@ static void batFrame(Monster *bat, float fr) {
 
 static void batRender(const Monster *bat) {
 	if (bat->flags & FLAG_ALIVE) {
-		float flapSpeed;
-		switch (bat->state) {
-			default :
-			case BAT_FLY : flapSpeed = 5.0f; break;
-			case BAT_CHARGE : flapSpeed = 1.0f; break;
-			case BAT_ATTACK : flapSpeed = 25.0f; break;
+		if (bat->state == BAT_ATTACK) {
+			drawSprite(bat->loc.x, bat->loc.y, 0.3f, 0.0f, BLOCK_BAT_ATTACK, 0);
+		} else {
+			float flapSpeed;
+			switch (bat->state) {
+				default :
+				case BAT_FLY : flapSpeed = 5.0f; break;
+				case BAT_CHARGE : flapSpeed = 1.0f; break;
+				case BAT_ATTACK : flapSpeed = 25.0f; break;
+			}
+			drawSprite(bat->loc.x, bat->loc.y, 0.3f, 0.0f,
+					animate(BLOCK_BAT1, 2, flapSpeed, elapse), 0);
 		}
-		drawSprite(bat->loc.x, bat->loc.y, 0.3f, 0.0f,
-				animate(BLOCK_BAT1, 2, flapSpeed), 0);
 	} else {
 		drawSprite(bat->loc.x, bat->loc.y, 0.3f, 0.0f, BLOCK_BAT_DEAD, 0);
 	}
@@ -142,13 +142,13 @@ static struct {
 	[MONSTER_BAT] = { batSpawn, batFrame, batRender },
 };
 
-void robo_generate(int seed, int iteration) {
+void roboGenerate(int seed, int iteration) {
 	monsterCount = 0;
 	batSpawn();
 }
 
-void robo_frame(float fr) {
-	dude_readPos(&dudeLoc.x, &dudeLoc.y);
+void roboFrame(float fr) {
+	dudeReadPos(&dudeLoc.x, &dudeLoc.y);
 
 	Monster *itr, *end;
 	itr = monsters;
@@ -156,7 +156,7 @@ void robo_frame(float fr) {
 
 	while (itr < end) {
 
-		if (itr->counter > 0.0f) {
+		if (itr->counter >= 0.0f) {
 			itr->counter -= fr;
 		}
 		monstersVt[itr->type].frame(itr, fr);
@@ -166,13 +166,23 @@ void robo_frame(float fr) {
 	elapse += fr;
 }
 
-void robo_render() {
+void roboRender() {
 	const Monster *itr, *end;
 	itr = monsters;
 	end = itr + monsterCount;
 
 	while (itr < end) {
 		monstersVt[itr->type].render(itr);
+		itr++;
+	}
+}
+
+void roboHit(float x, float y, int damage) {
+	Monster *itr, *end;
+	itr = monsters;
+	end = itr + monsterCount;
+
+	while (itr < end) {
 		itr++;
 	}
 }

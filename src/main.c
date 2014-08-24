@@ -1,10 +1,12 @@
 #include <estk.h>
+#include <stdio.h>
 #include <GL/glew.h>
 #include <SDL/SDL.h>
 #include "common.h"
 #include "map.h"
 #include "dude.h"
 #include "robo.h"
+#include "blood.h"
 
 enum {
 	SHAD_TEXTURE,
@@ -16,7 +18,7 @@ static esTexture sprites;
 
 static void frame(float time) {
 	if (time > 0.8f) {
-		esLog(ES_INFO, "Lag %.3 s", time);
+		esLog(ES_WARN, "Lag %.3 s", time);
 		return;
 	}
 
@@ -26,11 +28,11 @@ static void frame(float time) {
 	glUniform1i(esShader_uniformGl(&shad, SHAD_TEXTURE), 0);
 
 	// Frame
-	dude_frame(time);
-	robo_frame(time);
+	dudeFrame(time);
+	roboFrame(time);
 
 	float dudeX, dudeY;
-	dude_readPos(&dudeX, &dudeY);
+	dudeReadPos(&dudeX, &dudeY);
 
 	// View
 	esMat4f mat;
@@ -41,21 +43,22 @@ static void frame(float time) {
 			1, 0, (const float*) &mat);
 
 	// Map
-	map_render(dudeX, dudeY, SCREEN_RADIUS*2.2f);
+	mapRender(dudeX, dudeY, SCREEN_RADIUS*2.2f);
 
 	// Entities
-	dude_render();
-	robo_render();
+	dudeRender();
+	roboRender();
+	bloodProced(time);
 
 	esSprites2d_prepear();
-
 	esSprites2d_render();
+
 	esGame_glSwap();
 }
 
 static void loop_exit(void) {
-	dude_clear();
-	map_clear();
+	dudeClear();
+	mapClear();
 	esSprites2d_clear();
 	esTexture_free(&sprites);
 	esShader_free(&shad);
@@ -71,17 +74,30 @@ static void mouseEvent(int button, int down, int x, int y) {
 
 	ax = SCREEN_RADIUS * (2.0f * ax - 1.0f);
 	ay = SCREEN_RADIUS * (2.0f * ay - 1.0f);
-	dude_setAim(ax, -ay);
+	dudeSetAim(ax, -ay);
 
 	if (button) {
 		switch (button) {
-			case 1 : dude_setFire(down); break;
+			case 1 : dudeSetFire(down); break;
 			default : break;
 		}
 	}
 }
 
+#ifdef EMSCRIPTEN
+#include <stdio.h>
+
+static void emLog(esLogClass code, const char *msg) {
+	printf("ES[%d] %s\n", code, msg);
+}
+#endif
+
 int main(int argc, char **argv) {
+
+#ifdef EMSCRIPTEN
+	esLogCallback(emLog);
+#endif
+
 	esGame_init(SCREEN_REZ, SCREEN_REZ);
 	esLogVersion();
 
@@ -89,7 +105,7 @@ int main(int argc, char **argv) {
 
 	// Sprite textures
 	if (!esTexture_load(&sprites, "media/sprites.png", TEX_NONE, TEX_NONE)) {
-		printf("Cannot load image");
+		esLog(ES_ERRO, "Cannot load image");
 		return 1;
 	}
 
@@ -114,9 +130,10 @@ int main(int argc, char **argv) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	map_generate(0);
-	dude_init();
-	robo_generate(0, 1);
+	bloodReset();
+	mapGenerate(0);
+	dudeInit();
+	roboGenerate(0, 1);
 
 	esGame_registerMouse(mouseEvent);
 	esGame_registerKey(SDLK_q, callback_quit);

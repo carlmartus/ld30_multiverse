@@ -13,8 +13,12 @@
 
 #define FIRE_SPEED 15.0f
 #define FIRE_SCALE 1.5f
+#define FIRE_DELAY 0.2f
+#define FIRE_DAMAGE 20
 
 #define AIM_MAX (SCREEN_RADIUS*0.6f)
+
+#define BLOOD_SCALE 0.5f
 
 typedef enum {
 	BLOCK_HEAD,
@@ -25,6 +29,12 @@ typedef enum {
 	BLOCK_CROSSHAIR2,
 	BLOCK_FIRE1,
 	BLOCK_FIRE2,
+	BLOCK_DEAD,
+
+	BLOCK_SPLAT1,
+	BLOCK_SPLAT2,
+	BLOCK_SPLAT3,
+	BLOCK_SPLAT4,
 
 	BLOCK_GRASS,
 	BLOCK_ROAD_H,
@@ -34,6 +44,7 @@ typedef enum {
 
 	BLOCK_BAT1,
 	BLOCK_BAT2,
+	BLOCK_BAT_ATTACK,
 	BLOCK_BAT_DEAD,
 } Block;
 
@@ -42,28 +53,36 @@ typedef struct {
 } BlockSprite;
 
 static const BlockSprite blockSprites[] = {
-	[BLOCK_HEAD] = { 0, 0 },
-	[BLOCK_BODY] = { 1, 0 },
-	[BLOCK_FEET] = { 2, 0 },
-	[BLOCK_GUN] = { 3, 0 },
-	[BLOCK_CROSSHAIR1] = { 4, 0 },
-	[BLOCK_CROSSHAIR2] = { 5, 0 },
-	[BLOCK_FIRE1] = { 6, 0 },
-	[BLOCK_FIRE2] = { 7, 0 },
+	[BLOCK_HEAD] =			{ 0, 0 },
+	[BLOCK_BODY] =			{ 1, 0 },
+	[BLOCK_FEET] =			{ 2, 0 },
+	[BLOCK_GUN] =			{ 3, 0 },
+	[BLOCK_DEAD] =			{ 0, 1 },
+	[BLOCK_CROSSHAIR1] =	{ 4, 0 },
+	[BLOCK_CROSSHAIR2] =	{ 5, 0 },
+	[BLOCK_FIRE1] =			{ 6, 0 },
+	[BLOCK_FIRE2] =			{ 7, 0 },
 
-	[BLOCK_GRASS] = { 0, 1 },
-	[BLOCK_ROAD_H] = { 1, 1 },
-	[BLOCK_ROAD_V] = { 2, 1 },
-	[BLOCK_ROAD_X] = { 3, 1 },
-	[BLOCK_BUSH] = { 4, 1 },
+	[BLOCK_SPLAT1] =		{ 1, 1 },
+	[BLOCK_SPLAT2] =		{ 2, 1 },
+	[BLOCK_SPLAT3] =		{ 3, 1 },
+	[BLOCK_SPLAT4] =		{ 4, 1 },
 
-	[BLOCK_BAT1] = { 0, 4 },
-	[BLOCK_BAT2] = { 1, 4 },
-	[BLOCK_BAT_DEAD] = { 2, 4 },
+	[BLOCK_GRASS] =			{ 0, 2 },
+	[BLOCK_ROAD_H] =		{ 1, 2 },
+	[BLOCK_ROAD_V] =		{ 2, 2 },
+	[BLOCK_ROAD_X] =		{ 3, 2 },
+	[BLOCK_BUSH] =			{ 4, 2 },
+
+	[BLOCK_BAT1] =			{ 0, 4 },
+	[BLOCK_BAT2] =			{ 1, 4 },
+	[BLOCK_BAT_ATTACK] =	{ 2, 4 },
+	[BLOCK_BAT_DEAD] =		{ 3, 4 },
 };
 
 void drawSprite(float x, float y, float scale,
 		float rotation, Block block, int flags);
 esVec2f normalize(esVec2f v);
 esVec2f towards(esVec2f a, esVec2f b, float speed, float *distance);
+int animate(int baseFrame, int frameCount, int speed, float elapse);
 

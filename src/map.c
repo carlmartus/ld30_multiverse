@@ -42,14 +42,14 @@ static void makeRoad(void) {
 	map[roadX+roadY*RAD].type = BLOCK_ROAD_X;
 }
 
-void map_generate(int seed) {
+void mapGenerate(int seed) {
 	srand(seed);
 	fillGrass();
 	spreadBushes();
 	makeRoad();
 }
 
-void map_render(float centerX, float centerY, int blocks) {
+void mapRender(float centerX, float centerY, int blocks) {
 	int x, y;
 
 	int topx = (int) centerX - (blocks >> 1);
@@ -71,6 +71,6 @@ void map_render(float centerX, float centerY, int blocks) {
 	}
 }
 
-void map_clear(void) {
+void mapClear(void) {
 }
 

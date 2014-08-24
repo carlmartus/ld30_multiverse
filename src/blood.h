@@ -4,7 +4,7 @@ typedef enum {
 	HIT_SMALL,
 } HitType;
 
-void blood_reset(void);
-void blood_proced(float fr);
-void blood_hit(HitType type, float x, float y);
+void bloodReset(void);
+void bloodProced(float fr);
+void bloodHit(HitType type, float x, float y);
 

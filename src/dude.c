@@ -2,6 +2,7 @@
 #include <SDL/SDL.h>
 #include <math.h>
 #include "common.h"
+#include "blood.h"
 
 #define SIZE_X 0.4f
 #define SIZE_Y 1.0f
@@ -9,7 +10,7 @@
 static float locX, locY, shaky;
 static float aimX, aimY, lookX, lookY;
 static char move_w, move_s, move_a, move_d, firing;
-static float walking, elapse;
+static float walking, elapse, nextFire;
 
 static int hp;
 
@@ -18,7 +19,8 @@ static void event_s(int sdlkey, int down) { move_s = down; }
 static void event_a(int sdlkey, int down) { move_a = down; }
 static void event_d(int sdlkey, int down) { move_d = down; }
 
-void dude_init(void) {
+void dudeInit(void) {
+	nextFire = 0.0f;
 	locX = locY = shaky = 0.0f;
 
 	lookX = aimX = 0.0f;
@@ -35,10 +37,10 @@ void dude_init(void) {
 	esGame_registerKey(SDLK_RIGHT,	event_d);
 }
 
-void dude_clear(void) {
+void dudeClear(void) {
 }
 
-void dude_frame(float fr) {
+static void moveDude(float fr) {
 	float moveX=0.0f, moveY=0.0f;
 	if (move_a) moveX -= 1.0f;
 	if (move_d) moveX += 1.0f;
@@ -46,8 +48,9 @@ void dude_frame(float fr) {
 	if (move_s) moveY -= 1.0f;
 
 	if (moveX != 0.0f || moveY != 0.0f) {
-		locX += moveX*fr*3.0f;
-		locY += moveY*fr*3.0f;
+		float speed = firing ? 1.5f : 3.0f;
+		locX += moveX*fr*speed;
+		locY += moveY*fr*speed;
 		walking += fr;
 
 		if (((int) (walking*SHAKE)) & 1) {
@@ -59,6 +62,20 @@ void dude_frame(float fr) {
 		shaky = 0.0f;
 	}
 
+}
+
+static void fireDude(float fr) {
+	if (elapse > nextFire) {
+		roboHit(locX+aimX, locY+aimY, FIRE_DAMAGE);
+		nextFire = elapse + FIRE_DELAY;
+	}
+}
+
+void dudeFrame(float fr) {
+	if (hp > 0) {
+		moveDude(fr);
+		if (firing) fireDude(fr);
+	}
 	elapse += fr;
 }
 
@@ -81,7 +98,7 @@ static void drawFire(void) {
 			(step >> 1) & (ES_SPRITE_FLIPX|ES_SPRITE_FLIPY));
 }
 
-void dude_render(void) {
+void renderAlive(void) {
 	if (aimY > 0.0f) {
 		drawCanon();
 		drawBody();
@@ -96,7 +113,19 @@ void dude_render(void) {
 	drawSprite(locX+lookX, locY+lookY,	SCALE_CROSSHAIR, 0.0f, BLOCK_CROSSHAIR2, 0);
 }
 
-void dude_setAim(float sAimX, float sAimY) {
+void renderDead(void) {
+	drawSprite(locX, locY, SCALE_DUDE, 0.0f, BLOCK_DEAD, 0);
+}
+
+void dudeRender(void) {
+	if (hp > 0) {
+		renderAlive();
+	} else {
+		renderDead();
+	}
+}
+
+void dudeSetAim(float sAimX, float sAimY) {
 
 	lookX = sAimX;
 	lookY = sAimY;
@@ -112,23 +141,27 @@ void dude_setAim(float sAimX, float sAimY) {
 	}
 }
 
-int dude_touching(esVec2f thing, float rad) {
+int dudeTouching(esVec2f thing, float rad) {
 	float dx = fabsf(thing.x - locX);
 	float dy = fabsf(thing.y - locY);
 
 	return dx<SIZE_X && dy<SIZE_Y;
 }
 
-void dude_hurt(int hit) {
+void dudeHurt(int hit) {
+	if (hp - hit <= 0) {
+		bloodHit(HIT_SMALL, locX, locY);
+		bloodHit(HIT_SMALL, locX, locY);
+	}
 	hp -= hit;
-	esLog(ES_INFO, "Player HP %d", hp);
+	bloodHit(HIT_SMALL, locX, locY);
 }
 
-void dude_setFire(char on) {
+void dudeSetFire(char on) {
 	firing = on;
 }
 
-void dude_readPos(float *x, float *y) {
+void dudeReadPos(float *x, float *y) {
 	*x = locX;
 	*y = locY;
 }

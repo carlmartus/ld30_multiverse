@@ -42,3 +42,7 @@ esVec2f towards(esVec2f a, esVec2f b, float speed, float *distance) {
 	}
 }
 
+int animate(int baseFrame, int frameCount, int speed, float elapse) {
+	return baseFrame + (int) (elapse*speed) % frameCount;
+}
+
