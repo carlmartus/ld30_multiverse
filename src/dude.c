@@ -1,13 +1,17 @@
 #include "dude.h"
-#include <estk.h>
 #include <SDL/SDL.h>
 #include <math.h>
 #include "common.h"
+
+#define SIZE_X 0.4f
+#define SIZE_Y 1.0f
 
 static float locX, locY, shaky;
 static float aimX, aimY, lookX, lookY;
 static char move_w, move_s, move_a, move_d, firing;
 static float walking, elapse;
+
+static int hp;
 
 static void event_w(int sdlkey, int down) { move_w = down; }
 static void event_s(int sdlkey, int down) { move_s = down; }
@@ -23,6 +27,7 @@ void dude_init(void) {
 	move_w = move_s = move_a = move_d = firing = 0;
 
 	walking = elapse = 0.0f;
+	hp = 100;
 
 	esGame_registerKey(SDLK_UP,		event_w);
 	esGame_registerKey(SDLK_DOWN,	event_s);
@@ -71,7 +76,7 @@ static void drawBody(void) {
 static void drawFire(void) {
 	int step = ((int) (elapse*FIRE_SPEED));
 
-	drawSprite(locX, locY+shaky, FIRE_SCALE, 0.0f,
+	drawSprite(locX, locY+shaky, 1.5f, 0.0f,
 			step & 1 ? BLOCK_FIRE1 : BLOCK_FIRE2,
 			(step >> 1) & (ES_SPRITE_FLIPX|ES_SPRITE_FLIPY));
 }
@@ -105,6 +110,18 @@ void dude_setAim(float sAimX, float sAimY) {
 		aimX = lookX;
 		aimY = lookY;
 	}
+}
+
+int dude_touching(esVec2f thing, float rad) {
+	float dx = fabsf(thing.x - locX);
+	float dy = fabsf(thing.y - locY);
+
+	return dx<SIZE_X && dy<SIZE_Y;
+}
+
+void dude_hurt(int hit) {
+	hp -= hit;
+	esLog(ES_INFO, "Player HP %d", hp);
 }
 
 void dude_setFire(char on) {

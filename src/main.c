@@ -4,6 +4,7 @@
 #include "common.h"
 #include "map.h"
 #include "dude.h"
+#include "robo.h"
 
 enum {
 	SHAD_TEXTURE,
@@ -24,6 +25,10 @@ static void frame(float time) {
 	esShader_use(&shad);
 	glUniform1i(esShader_uniformGl(&shad, SHAD_TEXTURE), 0);
 
+	// Frame
+	dude_frame(time);
+	robo_frame(time);
+
 	float dudeX, dudeY;
 	dude_readPos(&dudeX, &dudeY);
 
@@ -39,8 +44,8 @@ static void frame(float time) {
 	map_render(dudeX, dudeY, SCREEN_RADIUS*2.2f);
 
 	// Entities
-	dude_frame(time);
 	dude_render();
+	robo_render();
 
 	esSprites2d_prepear();
 
@@ -111,6 +116,7 @@ int main(int argc, char **argv) {
 
 	map_generate(0);
 	dude_init();
+	robo_generate(0, 1);
 
 	esGame_registerMouse(mouseEvent);
 	esGame_registerKey(SDLK_q, callback_quit);
