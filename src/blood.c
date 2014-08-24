@@ -48,7 +48,9 @@ void bloodProced(float fr) {
 }
 
 static Bleed *getBleed(void) {
-	return bleeds + bleedId++;
+	Bleed *ret = bleeds + bleedId++;
+	if (bleedId >= MAX_BLEED) bleedId = 0;
+	return ret;
 }
 
 void bloodHit(HitType type, float x, float y) {
@@ -56,6 +58,7 @@ void bloodHit(HitType type, float x, float y) {
 	bl->flags = FLAG_ON;
 	bl->ttl = lifes[type].ttl;
 	bl->speed = lifes[type].speed;
+	bl->life = 0.0f;
 
 	int rx = (rand() & 7) - 3;
 	int ry = (rand() & 7) - 3;
